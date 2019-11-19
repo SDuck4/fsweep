@@ -40,6 +40,7 @@ var rootCmd = &cobra.Command{
 ./fsweep /var/log/httpd 30
 ->
 `,
+	Args: cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		internal.Init(args)
 	},
