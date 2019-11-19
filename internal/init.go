@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"fmt"
@@ -10,14 +10,14 @@ import (
 	"time"
 )
 
-func main() {
+func Init(args []string) {
 
 	// argument에서 path, day 가져오기
-	path, error := filepath.Abs(filepath.ToSlash(os.Args[1]))
+	path, error := filepath.Abs(filepath.ToSlash(args[1]))
 	if error != nil {
 		log.Fatal(error)
 	}
-	day, error := strconv.Atoi(os.Args[2])
+	day, error := strconv.Atoi(args[2])
 	if error != nil {
 		log.Fatal(error)
 	}
