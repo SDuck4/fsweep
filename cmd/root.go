@@ -33,13 +33,13 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "fsweep",
+	Use:   "fsweep <path> <number-of-days>",
 	Short: "Sweep old files",
 	Long: `Sweep old files based on file modified time. For example:
 
 ./fsweep /var/log/httpd 30
-->
 `,
+	Args: cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		internal.Init(args)
 	},
