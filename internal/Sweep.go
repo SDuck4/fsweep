@@ -19,7 +19,7 @@ import (
 // Sweep ...
 func Sweep(args []string, flags *pflag.FlagSet) {
 
-	// args에서 path, day 가져오기
+	// Get path, day from args
 	path, error := filepath.Abs(filepath.ToSlash(args[0]))
 	if error != nil {
 		log.Fatal(error)
@@ -29,7 +29,7 @@ func Sweep(args []string, flags *pflag.FlagSet) {
 		log.Fatal(error)
 	}
 
-	// flags에서 name, assumeyes 가져오기
+	// Get name, assumeyes from flags
 	name, error := flags.GetString("name")
 	if error != nil {
 		log.Fatal(error)
@@ -39,43 +39,43 @@ func Sweep(args []string, flags *pflag.FlagSet) {
 		log.Fatal(error)
 	}
 
-	// path 에서 파일 목록 가져오기
+	// Get files from path
 	files, error := ioutil.ReadDir(path)
 	if error != nil {
 		log.Fatal(error)
 	}
 
-	// 현재 시간 기준으로 day일 이전을 limit으로 설정
+	// Calculate modLimit using day
 	now := time.Now()
-	limit := now.AddDate(0, 0, -1*day)
+	modLimit := now.AddDate(0, 0, -1*day)
 
-	// name으로 파일 이름 정규식 생성
+	// Make nameRegexp using name
 	nameRegexp, error := regexp.Compile(name)
 	if error != nil {
 		log.Fatal(error)
 	}
 
-	// 삭제 대상 파일 필터링
+	// Filter files using modLimit, nameRegexp
 	deleteFileList := list.New()
 	for _, file := range files {
-		if !file.IsDir() && file.ModTime().Before(limit) && nameRegexp.MatchString(file.Name()) {
+		if !file.IsDir() && file.ModTime().Before(modLimit) && nameRegexp.MatchString(file.Name()) {
 			deleteFileList.PushBack(file)
 		}
 	}
 
-	// 삭제 대상 파일 존재 여부 확인
+	// Check deleteFileList exist
 	if deleteFileList.Len() == 0 {
 		fmt.Println("No file to delete.")
 		return
 	}
 
-	// 삭제 대상 파일 출력
+	// Print deleteFileList
 	for element := deleteFileList.Front(); element != nil; element = element.Next() {
 		var deleteFile = element.Value.(os.FileInfo)
 		fmt.Println(deleteFile.Name())
 	}
 
-	// 삭제 여부 확인
+	// Confirm deletion
 	if !assumeyes {
 		scanner := bufio.NewScanner(os.Stdin)
 		var confirm bool
@@ -107,7 +107,7 @@ func Sweep(args []string, flags *pflag.FlagSet) {
 		}
 	}
 
-	// 삭제 대상 파일 삭제
+	// Delete deleteFileList
 	for element := deleteFileList.Front(); element != nil; element = element.Next() {
 		var deleteFile = element.Value.(os.FileInfo)
 		error = os.Remove(path + "/" + deleteFile.Name())
@@ -116,7 +116,7 @@ func Sweep(args []string, flags *pflag.FlagSet) {
 		}
 	}
 
-	// 삭제 결과 출력
+	// Print the results
 	fmt.Printf("%d file(s) deleted.\n", deleteFileList.Len())
 
 }
