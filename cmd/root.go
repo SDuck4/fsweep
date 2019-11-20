@@ -30,6 +30,7 @@ import (
 )
 
 var cfgFile string
+var name string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -41,7 +42,8 @@ var rootCmd = &cobra.Command{
 `,
 	Args: cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		internal.Init(args)
+		flags := cmd.Flags()
+		internal.Init(args, flags)
 	},
 }
 
@@ -52,4 +54,8 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func init() {
+	rootCmd.Flags().StringVarP(&name, "name", "n", ".*", "file name pattern to delete in regexp")
 }
