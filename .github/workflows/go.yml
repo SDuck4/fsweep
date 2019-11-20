@@ -43,4 +43,4 @@ jobs:
       - name: Upload release asset
         id: upload-release-asset
         run: |
-          go run github.com/tcnksm/ghr -t ${{secrets.GITHUB_TOKEN}} -r ${{GITHUB_REPOSITORY}} -c ${{GITHUB_SHA}} -delete ${{GITHUB_REF}} ./dist
+          go run github.com/tcnksm/ghr -t {{secrets.GITHUB_TOKEN}} -r {{github.repository}} -c {{github.sha}} -delete {{github.ref}} ./dist
