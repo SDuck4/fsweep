@@ -14,7 +14,7 @@ var name string
 var rootCmd = &cobra.Command{
 	Use:   "fsweep <path> <number-of-days>",
 	Short: "Sweep old files",
-	Long: `Sweep old files based on file modified time. For example:
+	Long: `Sweep old files based on file's modified time and name. For example:
 
 ./fsweep /var/log/httpd 30
 `,
