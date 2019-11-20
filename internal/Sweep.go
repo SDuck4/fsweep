@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"bufio"
+	"container/list"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -8,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/spf13/pflag"
@@ -26,8 +29,12 @@ func Sweep(args []string, flags *pflag.FlagSet) {
 		log.Fatal(error)
 	}
 
-	// flags에서 name 가져오기
+	// flags에서 name, assumeyes 가져오기
 	name, error := flags.GetString("name")
+	if error != nil {
+		log.Fatal(error)
+	}
+	assumeyes, error := flags.GetBool("assumeyes")
 	if error != nil {
 		log.Fatal(error)
 	}
@@ -48,20 +55,68 @@ func Sweep(args []string, flags *pflag.FlagSet) {
 		log.Fatal(error)
 	}
 
-	// 파일 수정 시간이 limit 보다 이전인 경우, 파일 삭제
-	deleteCount := 0
+	// 삭제 대상 파일 필터링
+	deleteFileList := list.New()
 	for _, file := range files {
-		if file.ModTime().Before(limit) && nameRegexp.MatchString(file.Name()) {
-			filePath := path + "/" + file.Name()
-			error = os.Remove(filePath)
-			if error != nil {
-				log.Fatal(error)
-			}
-			deleteCount++
+		if !file.IsDir() && file.ModTime().Before(limit) && nameRegexp.MatchString(file.Name()) {
+			deleteFileList.PushBack(file)
 		}
 	}
 
-	// 결과 출력
-	fmt.Printf("%d file(s) deleted: files modified before %s", deleteCount, limit)
+	// 삭제 대상 파일 존재 여부 확인
+	if deleteFileList.Len() == 0 {
+		fmt.Println("No file to delete.")
+		return
+	}
+
+	// 삭제 대상 파일 출력
+	for element := deleteFileList.Front(); element != nil; element = element.Next() {
+		var deleteFile = element.Value.(os.FileInfo)
+		fmt.Println(deleteFile.Name())
+	}
+
+	// 삭제 여부 확인
+	if !assumeyes {
+		scanner := bufio.NewScanner(os.Stdin)
+		var confirm bool
+		var answered = false
+		for !answered {
+			fmt.Printf("Delete these %d file(s)? [y/n] ", deleteFileList.Len())
+			scanner.Scan()
+			answer := scanner.Text()
+			answer = strings.ToLower(answer)
+			switch answer {
+			case "y":
+				fallthrough
+			case "ye":
+				fallthrough
+			case "yes":
+				answered = true
+				confirm = true
+			case "n":
+				fallthrough
+			case "no":
+				answered = true
+				confirm = false
+			default:
+				fmt.Println("Error: Invalid answer. Please type 'y' or 'n'")
+			}
+		}
+		if !confirm {
+			return
+		}
+	}
+
+	// 삭제 대상 파일 삭제
+	for element := deleteFileList.Front(); element != nil; element = element.Next() {
+		var deleteFile = element.Value.(os.FileInfo)
+		error = os.Remove(path + "/" + deleteFile.Name())
+		if error != nil {
+			log.Fatal(error)
+		}
+	}
+
+	// 삭제 결과 출력
+	fmt.Printf("%d file(s) deleted.\n", deleteFileList.Len())
 
 }
