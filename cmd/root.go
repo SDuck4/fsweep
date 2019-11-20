@@ -35,4 +35,5 @@ func Execute() {
 
 func init() {
 	rootCmd.Flags().StringVarP(&name, "name", "n", ".*", "file name pattern to delete in regexp")
+	rootCmd.Flags().BoolP("assumeyes", "y", false, "assume that the answer to any question which would be asked is yes")
 }

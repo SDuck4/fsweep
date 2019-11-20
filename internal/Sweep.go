@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"bufio"
+	"container/list"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -8,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/spf13/pflag"
@@ -16,7 +19,7 @@ import (
 // Sweep ...
 func Sweep(args []string, flags *pflag.FlagSet) {
 
-	// args에서 path, day 가져오기
+	// Get path, day from args
 	path, error := filepath.Abs(filepath.ToSlash(args[0]))
 	if error != nil {
 		log.Fatal(error)
@@ -26,42 +29,94 @@ func Sweep(args []string, flags *pflag.FlagSet) {
 		log.Fatal(error)
 	}
 
-	// flags에서 name 가져오기
+	// Get name, assumeyes from flags
 	name, error := flags.GetString("name")
 	if error != nil {
 		log.Fatal(error)
 	}
+	assumeyes, error := flags.GetBool("assumeyes")
+	if error != nil {
+		log.Fatal(error)
+	}
 
-	// path 에서 파일 목록 가져오기
+	// Get files from path
 	files, error := ioutil.ReadDir(path)
 	if error != nil {
 		log.Fatal(error)
 	}
 
-	// 현재 시간 기준으로 day일 이전을 limit으로 설정
+	// Calculate modLimit using day
 	now := time.Now()
-	limit := now.AddDate(0, 0, -1*day)
+	modLimit := now.AddDate(0, 0, -1*day)
 
-	// name으로 파일 이름 정규식 생성
+	// Make nameRegexp using name
 	nameRegexp, error := regexp.Compile(name)
 	if error != nil {
 		log.Fatal(error)
 	}
 
-	// 파일 수정 시간이 limit 보다 이전인 경우, 파일 삭제
-	deleteCount := 0
+	// Filter files using modLimit, nameRegexp
+	deleteFileList := list.New()
 	for _, file := range files {
-		if file.ModTime().Before(limit) && nameRegexp.MatchString(file.Name()) {
-			filePath := path + "/" + file.Name()
-			error = os.Remove(filePath)
-			if error != nil {
-				log.Fatal(error)
-			}
-			deleteCount++
+		if !file.IsDir() && file.ModTime().Before(modLimit) && nameRegexp.MatchString(file.Name()) {
+			deleteFileList.PushBack(file)
 		}
 	}
 
-	// 결과 출력
-	fmt.Printf("%d file(s) deleted: files modified before %s", deleteCount, limit)
+	// Check deleteFileList exist
+	if deleteFileList.Len() == 0 {
+		fmt.Println("No file to delete.")
+		return
+	}
+
+	// Print deleteFileList
+	for element := deleteFileList.Front(); element != nil; element = element.Next() {
+		var deleteFile = element.Value.(os.FileInfo)
+		fmt.Println(deleteFile.Name())
+	}
+
+	// Confirm deletion
+	if !assumeyes {
+		scanner := bufio.NewScanner(os.Stdin)
+		var confirm bool
+		var answered = false
+		for !answered {
+			fmt.Printf("Delete these %d file(s)? [y/n] ", deleteFileList.Len())
+			scanner.Scan()
+			answer := scanner.Text()
+			answer = strings.ToLower(answer)
+			switch answer {
+			case "y":
+				fallthrough
+			case "ye":
+				fallthrough
+			case "yes":
+				answered = true
+				confirm = true
+			case "n":
+				fallthrough
+			case "no":
+				answered = true
+				confirm = false
+			default:
+				fmt.Println("Error: Invalid answer. Please type 'y' or 'n'")
+			}
+		}
+		if !confirm {
+			return
+		}
+	}
+
+	// Delete deleteFileList
+	for element := deleteFileList.Front(); element != nil; element = element.Next() {
+		var deleteFile = element.Value.(os.FileInfo)
+		error = os.Remove(path + "/" + deleteFile.Name())
+		if error != nil {
+			log.Fatal(error)
+		}
+	}
+
+	// Print the results
+	fmt.Printf("%d file(s) deleted.\n", deleteFileList.Len())
 
 }
