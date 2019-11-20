@@ -13,8 +13,8 @@ import (
 	"github.com/spf13/pflag"
 )
 
-// Init ...
-func Init(args []string, flags *pflag.FlagSet) {
+// Sweep ...
+func Sweep(args []string, flags *pflag.FlagSet) {
 
 	// args에서 path, day 가져오기
 	path, error := filepath.Abs(filepath.ToSlash(args[0]))

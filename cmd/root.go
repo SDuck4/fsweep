@@ -43,7 +43,7 @@ var rootCmd = &cobra.Command{
 	Args: cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		flags := cmd.Flags()
-		internal.Init(args, flags)
+		internal.Sweep(args, flags)
 	},
 }
 
