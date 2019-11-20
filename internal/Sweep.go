@@ -6,18 +6,28 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/spf13/pflag"
 )
 
-func Init(args []string) {
+// Sweep ...
+func Sweep(args []string, flags *pflag.FlagSet) {
 
-	// argument에서 path, day 가져오기
+	// args에서 path, day 가져오기
 	path, error := filepath.Abs(filepath.ToSlash(args[0]))
 	if error != nil {
 		log.Fatal(error)
 	}
 	day, error := strconv.Atoi(args[1])
+	if error != nil {
+		log.Fatal(error)
+	}
+
+	// flags에서 name 가져오기
+	name, error := flags.GetString("name")
 	if error != nil {
 		log.Fatal(error)
 	}
@@ -32,10 +42,16 @@ func Init(args []string) {
 	now := time.Now()
 	limit := now.AddDate(0, 0, -1*day)
 
+	// name으로 파일 이름 정규식 생성
+	nameRegexp, error := regexp.Compile(name)
+	if error != nil {
+		log.Fatal(error)
+	}
+
 	// 파일 수정 시간이 limit 보다 이전인 경우, 파일 삭제
 	deleteCount := 0
 	for _, file := range files {
-		if file.ModTime().Before(limit) {
+		if file.ModTime().Before(limit) && nameRegexp.MatchString(file.Name()) {
 			filePath := path + "/" + file.Name()
 			error = os.Remove(filePath)
 			if error != nil {
