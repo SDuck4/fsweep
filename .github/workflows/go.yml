@@ -1,5 +1,10 @@
 name: Go
-on: [push]
+
+on:
+  push:
+    tags: 
+      - 'v*'
+
 jobs:
 
   build:
@@ -28,3 +33,29 @@ jobs:
       run: |
         go run github.com/mitchellh/gox -os="linux darwin windows" -arch="amd64" -output="dist/fsweep_{{.OS}}_{{.Arch}}"
         cd dist/ && gzip -k *
+
+  release:
+    name: Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Create release
+        id: create-release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          tag_name: ${{github.ref}}
+          release_name: Release ${{github.ref}}
+          draft: true
+          prerelease: false
+
+      - name: Upload release asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.create-release.outputs.upload_url}}
+          asset_path: ./dist
