@@ -42,5 +42,7 @@ jobs:
 
       - name: Upload release asset
         id: upload-release-asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          go run github.com/tcnksm/ghr -t ${{ GITHUB_TOKEN }} -r ${{ GITHUB_REPOSITORY }} -c ${{ GITHUB_SHA }} -delete ${{ GITHUB_REF }} ./dist
+          go run github.com/tcnksm/ghr -r ${{ GITHUB_REPOSITORY }} -c ${{ GITHUB_SHA }} -delete ${{ GITHUB_REF }} ./dist
