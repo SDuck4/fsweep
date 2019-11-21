@@ -40,16 +40,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: Set up Go 1.13
-        uses: actions/setup-go@v1
-        with:
-          go-version: 1.13
-        id: go
-
-      - name: Upload release asset
-        id: upload-release-asset
+      - name: Upload build
+        uses: fnkr/github-action-ghr@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          go get -u github.com/tcnksm/ghr
-          ghr -r $GITHUB_REPOSITORY -c $GITHUB_SHA -delete $GITHUB_REF ./dist
+          GHR_PATH: dist/
