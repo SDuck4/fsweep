@@ -51,4 +51,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          go run github.com/tcnksm/ghr -r $GITHUB_REPOSITORY -c $GITHUB_SHA -delete $GITHUB_REF ./dist
+          go get -u github.com/tcnksm/ghr
+          ghr -r $GITHUB_REPOSITORY -c $GITHUB_SHA -delete $GITHUB_REF ./dist
