@@ -8,7 +8,7 @@ on:
 jobs:
 
   build:
-    name: Build
+    name: Build and Release
     runs-on: ubuntu-latest
     steps:
 
@@ -34,14 +34,8 @@ jobs:
         go run github.com/mitchellh/gox -os="linux darwin windows" -arch="amd64" -output="dist/fsweep_{{.OS}}_{{.Arch}}"
         cd dist/ && gzip -k *
 
-  release:
-    name: Release
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-
-      - name: Upload build
-        uses: fnkr/github-action-ghr@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GHR_PATH: dist/
+    - name: Release
+      uses: fnkr/github-action-ghr@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GHR_PATH: dist/
